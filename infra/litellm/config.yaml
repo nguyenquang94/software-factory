@@ -1,0 +1,11 @@
+# Minimal LiteLLM proxy config for local dev.
+# ANTHROPIC_API_KEY and LITELLM_MASTER_KEY are injected via environment
+# (see infra/.env.example).
+model_list:
+  - model_name: claude
+    litellm_params:
+      model: anthropic/claude-sonnet-4-20250514
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
