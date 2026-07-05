@@ -1,19 +1,13 @@
 {
  "commands": [
   {
+   "action": "merge_pr",
+   "pr": 32
+  },
+  {
    "action": "comment",
    "number": 4,
-   "body": "🔧 WORK ORDER — giao cho Antigravity (coding agent)\n\n**Việc**: Prisma schema đầy đủ theo `docs/01-db-schema.md` + migration đầu.\n\n**Các bước**:\n1. Branch `factory/4-prisma-schema` từ main mới nhất\n2. Đọc `docs/01-db-schema.md` — nguồn chân lý\n3. Tạo `apps/core/prisma/schema.prisma`: đủ 26 model (Tenant, Project, AgentProfile, RoleAssignment, User, ProjectMember, Intent, ClarifyingQuestion, Prototype, Breakdown, Requirement, Story, StoryRequirement, AcceptanceCriterion, UnitOfWork, UowDependency, Task, Bolt, AgentJob, AgentReview, AttentionItem, TestRun, TestRunAc, LlmCall, AuditLog, CodeChunk)\n   - id: `String @id @default(uuid()) @db.Uuid`; createdAt/updatedAt; tenantId + projectId trên bảng nghiệp vụ\n   - Status: String (check constraint thêm bằng SQL); index theo docs; `CodeChunk.embedding: Unsupported(\"vector(1024)\")`\n4. `apps/core/package.json`: thêm devDep `prisma@^5`, dep `@prisma/client@^5`\n5. Migration: `prisma migrate dev --name init` với DB từ `infra/docker-compose.dev.yml` (hoặc `prisma migrate diff --from-empty` nếu không có DB). Thêm `migrations/0002_checks/migration.sql`: CREATE EXTENSION vector + check constraints cho status enum (intent, task, agent_job, attention_item, breakdown)\n\n**Verify DoD**: `pnpm exec prisma validate` pass · `pnpm build && pnpm lint` xanh · migration SQL sinh đủ bảng\n\n**allowed_paths**: `apps/core/prisma/`, `apps/core/package.json`, `pnpm-lock.yaml`\n**Commit cuối dòng**: `Closes #4` — push branch, KHÔNG merge."
-  },
-  {
-   "action": "comment",
-   "number": 10,
-   "body": "🔧 WORK ORDER — giao cho Antigravity (coding agent)\n\n**Việc**: Worker skeleton — BullMQ consumer, job contract, workspace, callbacks. Spec: `docs/03-agent-worker-spec.md` §1, §3, §4.\n\n**Các bước**:\n1. Branch `factory/10-worker-skeleton`\n2. Implement trong `apps/agent-worker/src/`:\n   - `config.ts`: env (REDIS_URL, CORE_URL, SERVICE_TOKEN, FACTORY_MAX_CONCURRENT_JOBS=3, FACTORY_KEEP_WORKSPACE)\n   - `queue/consumer.ts`: BullMQ Worker queue `AGENT_JOBS_QUEUE` (import `@factory/shared`), concurrency theo config, validate payload `AgentJobPayload` (validator tay, không thêm lib)\n   - `workspace/workspace.ts`: git clone --filter=blob:none + work_branch; cleanup (giữ nếu KEEP_WORKSPACE=1)\n   - `callbacks/core-client.ts`: POST /internal/agent-jobs/:id/events + /llm-calls, Bearer service token, retry 3 backoff\n   - `runner/mock-runner.ts`: trả succeeded (adapter thật ở T-104.2/104.3)\n   - `main.ts`: wire + graceful shutdown SIGTERM\n3. Deps apps/agent-worker: bullmq, ioredis\n4. Unit tests (node:test): validator, core-client retry (mock fetch), workspace logic — không cần redis thật\n\n**Verify DoD**: `pnpm --filter @factory/agent-worker build` + tests pass · `pnpm lint` xanh\n\n**allowed_paths**: `apps/agent-worker/**`, `pnpm-lock.yaml`\n**Commit cuối dòng**: `Closes #10` — push branch, KHÔNG merge."
-  },
-  {
-   "action": "comment",
-   "number": 17,
-   "body": "🔧 WORK ORDER — giao cho Antigravity (coding agent)\n\n**Việc**: LiteLLM config hoàn chỉnh — route đa model, virtual key per tenant, quota.\n\n**Các bước**:\n1. Branch `factory/17-litellm-tenant-config`\n2. Mở rộng `infra/litellm/config.yaml`: model_list nhiều model (claude qua ANTHROPIC_API_KEY, chừa chỗ openai/self-host comment), general_settings: master_key env, database_url env (postgres của compose) để bật virtual keys; router_settings failover cơ bản\n3. `infra/litellm/README.md`: cách tạo virtual key per tenant (curl /key/generate với budget, ghi tenant vào metadata), cách đặt budget/quota per key\n4. Cập nhật service litellm trong `infra/docker-compose.dev.yml` nếu cần env/depends_on postgres\n\n**Verify DoD**: YAML hợp lệ; `docker compose up litellm` + tạo 2 key 2 tenant, quota tách nhau (verify trên máy có Docker, ghi kết quả vào PR)\n\n**allowed_paths**: `infra/**`\n**Commit cuối dòng**: `Closes #17` — push branch, KHÔNG merge."
+   "body": "✅ Cross-review PASS (PM agent): 26 model đúng docs/01, tenant_id + index + pgvector chuẩn. 2 finding nhỏ chuyển sang T-102.2 (#5): thiếu check agent_review.verdict và constraint một-trong-hai-FK cho acceptance_criterion/agent_job. Merge PR #32. 👏 Job đầu tiên của Antigravity qua agent-bridge thành công."
   }
  ]
 }
