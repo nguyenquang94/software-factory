@@ -1,1 +1,9 @@
-{"jobs":[]}
+{
+ "jobs": [
+  {
+   "issue": 17,
+   "branch": "factory/17-litellm-tenant-config",
+   "agent": "antigravity"
+  }
+ ]
+}
