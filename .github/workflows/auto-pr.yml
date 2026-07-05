@@ -1,0 +1,37 @@
+name: auto-pr
+
+on:
+  push:
+    branches: ["factory/**"]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const branch = context.ref.replace('refs/heads/', '');
+            const { owner, repo } = context.repo;
+            const existing = await github.rest.pulls.list({ owner, repo, head: `${owner}:${branch}`, state: 'open' });
+            if (existing.data.length > 0) { core.info(`PR exists: #${existing.data[0].number}`); return; }
+            const m = branch.match(/^factory\/(\d+)-/);
+            const issueNum = m ? m[1] : null;
+            let title = context.payload.head_commit ? context.payload.head_commit.message.split('\n')[0] : branch;
+            let body = '';
+            if (issueNum) {
+              const issue = await github.rest.issues.get({ owner, repo, issue_number: Number(issueNum) });
+              title = `${title}`;
+              body = `Closes #${issueNum}\n\n## Issue\n${issue.data.title}\n\n## Self-report\nXem mô tả trong commit và diff. DoD theo issue.`;
+            } else {
+              body = 'Branch không gắn issue — kiểm tra quy ước `factory/<issue>-<slug>`.';
+            }
+            const pr = await github.rest.pulls.create({ owner, repo, head: branch, base: 'main', title, body });
+            core.info(`Created PR #${pr.data.number}`);
+            if (issueNum) {
+              await github.rest.issues.addLabels({ owner, repo, issue_number: pr.data.number, labels: [] }).catch(() => {});
+            }
