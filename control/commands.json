@@ -2,12 +2,21 @@
  "commands": [
   {
    "action": "merge_pr",
-   "pr": 29
+   "pr": 30
   },
   {
    "action": "comment",
-   "number": 1,
-   "body": "✅ Cross-review PASS (PM agent): monorepo skeleton đúng DoD — pnpm install/build/lint xanh (verified trong sandbox). Squash merge PR #29."
+   "number": 3,
+   "body": "✅ Cross-review PASS (PM agent): workflow CI đúng DoD — trigger PR+main, pnpm từ packageManager, 4 bước install/build/lint/test. Merge PR #30."
+  },
+  {
+   "action": "merge_pr",
+   "pr": 31
+  },
+  {
+   "action": "comment",
+   "number": 2,
+   "body": "✅ Cross-review PASS (PM agent): compose 5 service đúng spec, YAML hợp lệ. Lưu ý DoD đầy đủ (docker compose up) verify trên máy có Docker. Merge PR #31."
   }
  ]
 }
