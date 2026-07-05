@@ -1,0 +1,118 @@
+name: agent-runner
+
+on:
+  push:
+    branches: [main]
+    paths: ["control/agent-dispatch.json"]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.load.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: load
+        run: echo "matrix=$(jq -c '{include: .jobs}' control/agent-dispatch.json)" >> "$GITHUB_OUTPUT"
+
+  run-agent:
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+    env:
+      ANTIGRAVITY_TOKEN: ${{ secrets.ANTIGRAVITY_TOKEN }}
+      ANTIGRAVITY_API_KEY: ${{ secrets.ANTIGRAVITY_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check secret
+        run: |
+          if [ -z "$ANTIGRAVITY_TOKEN" ] && [ -z "$ANTIGRAVITY_API_KEY" ] && [ -z "$GEMINI_API_KEY" ]; then
+            echo "::error::Thiếu secret ANTIGRAVITY_TOKEN (hoặc ANTIGRAVITY_API_KEY/GEMINI_API_KEY). Thêm ở Settings → Secrets → Actions."
+            exit 1
+          fi
+
+      - name: Install Antigravity CLI
+        run: |
+          curl -fsSL https://antigravity.google/cli/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+
+      - name: Build prompt from issue + work order
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const num = Number('${{ matrix.issue }}');
+            const issue = await github.rest.issues.get({ owner, repo, issue_number: num });
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number: num });
+            const wo = comments.filter(c => c.body.includes('WORK ORDER')).map(c => c.body).join('\n\n');
+            const fs = require('fs');
+            fs.writeFileSync('.factory-prompt.txt',
+              `Bạn là coding agent của Software Factory. Đọc AGENTS.md trước khi làm.\n\n` +
+              `# GitHub Issue #${num}: ${issue.data.title}\n\n${issue.data.body}\n\n# Work order\n${wo}\n\n` +
+              `# Ràng buộc\n- Chỉ sửa file trong allowed_paths của issue (+ pnpm-lock.yaml nếu thêm dep)\n` +
+              `- KHÔNG commit, KHÔNG push, KHÔNG đụng .github/ và control/ — hệ thống sẽ commit hộ\n` +
+              `- Verify DoD bằng lệnh trong work order trước khi kết thúc`);
+            core.info(fs.readFileSync('.factory-prompt.txt','utf8').slice(0,500));
+
+      - name: Create work branch
+        run: |
+          git config user.name "Antigravity (factory runner)"
+          git config user.email "factory-agent@users.noreply.github.com"
+          git checkout -b "${{ matrix.branch }}"
+
+      - name: Run Antigravity
+        id: agy
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          agy --headless --approve all -p "$(cat .factory-prompt.txt)" 2>&1 | tee agy-run.log || {
+            echo "::warning::agy exit khác 0 — thử fallback flags"
+            agy -p "$(cat .factory-prompt.txt)" --headless 2>&1 | tee -a agy-run.log
+          }
+
+      - name: Verify & commit
+        id: commit
+        run: |
+          rm -f .factory-prompt.txt
+          git checkout -- control/ .github/ 2>/dev/null || true
+          if git diff --quiet && [ -z "$(git status --porcelain -- . ':!agy-run.log')" ]; then
+            echo "::error::Agent không tạo thay đổi nào — xem agy-run.log"
+            tail -50 agy-run.log
+            exit 1
+          fi
+          pnpm install --frozen-lockfile 2>/dev/null || pnpm install
+          pnpm build && pnpm lint || echo "::warning::verify chưa xanh — PM sẽ review kỹ"
+          git add -A ':!agy-run.log'
+          git commit -m "feat: ${{ matrix.branch }} (Antigravity via agent-runner)
+
+Closes #${{ matrix.issue }}"
+          git push -u origin "${{ matrix.branch }}"
+
+      - name: Report failure to issue
+        if: failure() || steps.commit.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let log = '';
+            try { log = fs.readFileSync('agy-run.log','utf8').slice(-2500); } catch {}
+            await github.rest.issues.createComment({
+              ...context.repo, issue_number: Number('${{ matrix.issue }}'),
+              body: `⚠️ agent-runner FAILED cho branch \`${{ matrix.branch }}\`.\n\nLog cuối:\n\`\`\`\n${log}\n\`\`\`\nPM sẽ điều chỉnh và dispatch lại.`
+            });
