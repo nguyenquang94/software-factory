@@ -1,0 +1,616 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Tenant {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  deployMode  String   @map("deploy_mode")
+  modelPolicy String   @map("model_policy")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  projects            Project[]
+  agentProfiles       AgentProfile[]
+  roleAssignments     RoleAssignment[]
+  users               User[]
+  projectMembers      ProjectMember[]
+  intents             Intent[]
+  clarifyingQuestions ClarifyingQuestion[]
+  prototypes          Prototype[]
+  breakdowns          Breakdown[]
+  requirements        Requirement[]
+  stories             Story[]
+  storyRequirements   StoryRequirement[]
+  acceptanceCriteria  AcceptanceCriterion[]
+  unitsOfWork         UnitOfWork[]
+  uowDependencies     UowDependency[]
+  tasks               Task[]
+  bolts               Bolt[]
+  agentJobs           AgentJob[]
+  agentReviews        AgentReview[]
+  attentionItems      AttentionItem[]
+  testRuns            TestRun[]
+  testRunAcs          TestRunAc[]
+  llmCalls            LlmCall[]
+  auditLogs           AuditLog[]
+  codeChunks          CodeChunk[]
+
+  @@map("tenant")
+}
+
+model Project {
+  id                   String   @id @default(uuid()) @db.Uuid
+  name                 String
+  customerName         String   @map("customer_name")
+  githubRepo           String   @map("github_repo")
+  githubInstallationId BigInt   @map("github_installation_id")
+  settings             Json
+  status               String
+  tenantId             String   @map("tenant_id") @db.Uuid
+  tenant               Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  agentProfiles       AgentProfile[]
+  roleAssignments     RoleAssignment[]
+  projectMembers      ProjectMember[]
+  intents             Intent[]
+  clarifyingQuestions ClarifyingQuestion[]
+  prototypes          Prototype[]
+  breakdowns          Breakdown[]
+  requirements        Requirement[]
+  stories             Story[]
+  storyRequirements   StoryRequirement[]
+  acceptanceCriteria  AcceptanceCriterion[]
+  unitsOfWork         UnitOfWork[]
+  uowDependencies     UowDependency[]
+  tasks               Task[]
+  bolts               Bolt[]
+  agentJobs           AgentJob[]
+  agentReviews        AgentReview[]
+  attentionItems      AttentionItem[]
+  testRuns            TestRun[]
+  testRunAcs          TestRunAc[]
+  llmCalls            LlmCall[]
+  auditLogs           AuditLog[]
+  codeChunks          CodeChunk[]
+
+  @@map("project")
+}
+
+model AgentProfile {
+  id                  String   @id @default(uuid()) @db.Uuid
+  projectId           String?  @map("project_id") @db.Uuid
+  project             Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name                String
+  adapter             String
+  model               String
+  config              Json
+  tokenBudgetDefault  Int      @map("token_budget_default")
+  enabled             Boolean
+  tenantId            String   @map("tenant_id") @db.Uuid
+  tenant              Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  roleAssignments     RoleAssignment[]
+  tasks               Task[]
+  agentJobs           AgentJob[]
+
+  @@map("agent_profile")
+}
+
+model RoleAssignment {
+  id             String       @id @default(uuid()) @db.Uuid
+  projectId      String       @map("project_id") @db.Uuid
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  role           String
+  agentProfileId String       @map("agent_profile_id") @db.Uuid
+  agentProfile   AgentProfile @relation(fields: [agentProfileId], references: [id], onDelete: Cascade)
+  tenantId       String       @map("tenant_id") @db.Uuid
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([projectId, role])
+  @@map("role_assignment")
+}
+
+model User {
+  id         String   @id @default(uuid()) @db.Uuid
+  email      String   @unique
+  name       String
+  roleGlobal String   @map("role_global")
+  ssoSubject String   @map("sso_subject")
+  tenantId   String   @map("tenant_id") @db.Uuid
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  projectMembers                 ProjectMember[]
+  intentsGateA                   Intent[]             @relation("GateABy")
+  breakdownsGateB                Breakdown[]          @relation("GateBBy")
+  attentionItemsAssignee         AttentionItem[]      @relation("Assignee")
+  attentionItemsResolvedBy       AttentionItem[]      @relation("ResolvedBy")
+  clarifyingQuestionsAnsweredBy  ClarifyingQuestion[]
+
+  @@map("user")
+}
+
+model ProjectMember {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String
+  tenantId  String   @map("tenant_id") @db.Uuid
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([projectId, userId])
+  @@map("project_member")
+}
+
+model Intent {
+  id                  String    @id @default(uuid()) @db.Uuid
+  projectId           String    @map("project_id") @db.Uuid
+  project             Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title               String
+  rawInput            String    @map("raw_input")
+  sourceChannel       String    @map("source_channel")
+  githubIssueNumber   Int?      @map("github_issue_number")
+  pathway             String
+  pathwayConfidence   Float     @map("pathway_confidence") @db.Real
+  summary             String
+  complexityScore     Int       @map("complexity_score") @db.SmallInt
+  riskScore           Int       @map("risk_score") @db.SmallInt
+  aiReadiness         Float     @map("ai_readiness") @db.Real
+  effortEstimate      Json      @map("effort_estimate")
+  status              String
+  gateABy             String?   @map("gate_a_by") @db.Uuid
+  gateAByUser         User?     @relation("GateABy", fields: [gateABy], references: [id])
+  gateAAt             DateTime? @map("gate_a_at") @db.Timestamptz(6)
+  customerAck         Json?     @map("customer_ack")
+  tenantId            String    @map("tenant_id") @db.Uuid
+  tenant              Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  clarifyingQuestions ClarifyingQuestion[]
+  prototypes          Prototype[]
+  breakdowns          Breakdown[]
+  agentJobs           AgentJob[]
+
+  @@map("intent")
+}
+
+model ClarifyingQuestion {
+  id             String    @id @default(uuid()) @db.Uuid
+  intentId       String    @map("intent_id") @db.Uuid
+  intent         Intent    @relation(fields: [intentId], references: [id], onDelete: Cascade)
+  question       String
+  options        Json?
+  answer         String?
+  answeredBy     String?   @map("answered_by") @db.Uuid
+  answeredByUser User?     @relation(fields: [answeredBy], references: [id])
+  answeredAt     DateTime? @map("answered_at") @db.Timestamptz(6)
+  orderIndex     Int       @map("order_index")
+  tenantId       String    @map("tenant_id") @db.Uuid
+  tenant         Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  projectId      String    @map("project_id") @db.Uuid
+  project        Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("clarifying_question")
+}
+
+model Prototype {
+  id         String   @id @default(uuid()) @db.Uuid
+  intentId   String   @map("intent_id") @db.Uuid
+  intent     Intent   @relation(fields: [intentId], references: [id], onDelete: Cascade)
+  version    Int
+  branch     String
+  previewUrl String   @map("preview_url")
+  screens    Json
+  status     String
+  feedback   Json?
+  tenantId   String   @map("tenant_id") @db.Uuid
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  projectId  String   @map("project_id") @db.Uuid
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([intentId, version])
+  @@map("prototype")
+}
+
+model Breakdown {
+  id         String    @id @default(uuid()) @db.Uuid
+  intentId   String    @map("intent_id") @db.Uuid
+  intent     Intent    @relation(fields: [intentId], references: [id], onDelete: Cascade)
+  version    Int
+  status     String
+  gateBBy    String?   @map("gate_b_by") @db.Uuid
+  gateBByUser User?     @relation("GateBBy", fields: [gateBBy], references: [id])
+  gateBAt    DateTime? @map("gate_b_at") @db.Timestamptz(6)
+  notes      String?
+  tenantId   String    @map("tenant_id") @db.Uuid
+  tenant     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  projectId  String    @map("project_id") @db.Uuid
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  requirements Requirement[]
+  stories      Story[]
+  unitsOfWork  UnitOfWork[]
+
+  @@unique([intentId, version])
+  @@map("breakdown")
+}
+
+model Requirement {
+  id             String   @id @default(uuid()) @db.Uuid
+  breakdownId    String   @map("breakdown_id") @db.Uuid
+  breakdown      Breakdown @relation(fields: [breakdownId], references: [id], onDelete: Cascade)
+  code           String
+  type           String
+  title          String
+  description    String
+  impactAnalysis Json     @map("impact_analysis")
+  orderIndex     Int      @map("order_index")
+  tenantId       String   @map("tenant_id") @db.Uuid
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  projectId      String   @map("project_id") @db.Uuid
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  storyRequirements StoryRequirement[]
+
+  @@unique([breakdownId, code])
+  @@map("requirement")
+}
+
+model Story {
+  id          String   @id @default(uuid()) @db.Uuid
+  breakdownId String   @map("breakdown_id") @db.Uuid
+  breakdown   Breakdown @relation(fields: [breakdownId], references: [id], onDelete: Cascade)
+  code        String
+  title       String
+  narrative   String
+  orderIndex  Int      @map("order_index")
+  tenantId    String   @map("tenant_id") @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  projectId   String   @map("project_id") @db.Uuid
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  storyRequirements StoryRequirement[]
+  acceptanceCriteria AcceptanceCriterion[]
+
+  @@unique([breakdownId, code])
+  @@map("story")
+}
+
+model StoryRequirement {
+  id            String      @id @default(uuid()) @db.Uuid
+  storyId       String      @map("story_id") @db.Uuid
+  story         Story       @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  requirementId String      @map("requirement_id") @db.Uuid
+  requirement   Requirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  tenantId      String      @map("tenant_id") @db.Uuid
+  tenant        Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  projectId     String      @map("project_id") @db.Uuid
+  project       Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([storyId, requirementId])
+  @@map("story_requirement")
+}
+
+model AcceptanceCriterion {
+  id           String      @id @default(uuid()) @db.Uuid
+  storyId      String?     @map("story_id") @db.Uuid
+  story        Story?      @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  unitOfWorkId String?     @map("unit_of_work_id") @db.Uuid
+  unitOfWork   UnitOfWork? @relation(fields: [unitOfWorkId], references: [id], onDelete: Cascade)
+  code         String
+  givenWhenThen String     @map("given_when_then")
+  orderIndex   Int         @map("order_index")
+  tenantId     String      @map("tenant_id") @db.Uuid
+  tenant       Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  projectId    String      @map("project_id") @db.Uuid
+  project      Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  testRunAcs   TestRunAc[]
+
+  @@map("acceptance_criterion")
+}
+
+model UnitOfWork {
+  id                String   @id @default(uuid()) @db.Uuid
+  breakdownId       String   @map("breakdown_id") @db.Uuid
+  breakdown         Breakdown @relation(fields: [breakdownId], references: [id], onDelete: Cascade)
+  code              String
+  name              String
+  description       String
+  boundedContext    String   @map("bounded_context")
+  interfaceContract Json     @map("interface_contract")
+  agentOverrides    Json?    @map("agent_overrides")
+  allowedPaths      String[] @map("allowed_paths")
+  status            String
+  tenantId          String   @map("tenant_id") @db.Uuid
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  projectId         String   @map("project_id") @db.Uuid
+  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  dependencies       UowDependency[]       @relation("UowSource")
+  dependentOn        UowDependency[]       @relation("UowTarget")
+  tasks              Task[]
+  acceptanceCriteria AcceptanceCriterion[]
+
+  @@map("unit_of_work")
+}
+
+model UowDependency {
+  id             String     @id @default(uuid()) @db.Uuid
+  uowId          String     @map("uow_id") @db.Uuid
+  uow            UnitOfWork @relation("UowSource", fields: [uowId], references: [id], onDelete: Cascade)
+  dependsOnUowId String     @map("depends_on_uow_id") @db.Uuid
+  dependsOnUow   UnitOfWork @relation("UowTarget", fields: [dependsOnUowId], references: [id], onDelete: Cascade)
+  tenantId       String     @map("tenant_id") @db.Uuid
+  tenant         Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  projectId      String     @map("project_id") @db.Uuid
+  project        Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([uowId, dependsOnUowId])
+  @@map("uow_dependency")
+}
+
+model Task {
+  id              String        @id @default(uuid()) @db.Uuid
+  unitOfWorkId    String?       @map("unit_of_work_id") @db.Uuid
+  unitOfWork      UnitOfWork?   @relation(fields: [unitOfWorkId], references: [id], onDelete: Cascade)
+  boltId          String?       @map("bolt_id") @db.Uuid
+  bolt            Bolt?         @relation(fields: [boltId], references: [id], onDelete: SetNull)
+  code            String
+  title           String
+  description     String
+  definitionOfDone String       @map("definition_of_done")
+  role            String
+  status          String
+  flagReason      String?       @map("flag_reason")
+  agentProfileId  String?       @map("agent_profile_id") @db.Uuid
+  agentProfile    AgentProfile? @relation(fields: [agentProfileId], references: [id])
+  reworkCount     Int           @default(0) @map("rework_count") @db.SmallInt
+  priority        Int           @map("priority") @db.SmallInt
+  orderIndex      Int           @map("order_index") @db.SmallInt
+  dueAt           DateTime      @map("due_at") @db.Timestamptz(6)
+  tenantId        String        @map("tenant_id") @db.Uuid
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  projectId       String        @map("project_id") @db.Uuid
+  project         Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  agentJobs       AgentJob[]
+  agentReviews    AgentReview[]
+  testRuns        TestRun[]
+
+  @@map("task")
+}
+
+model Bolt {
+  id        String   @id @default(uuid()) @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name      String
+  startsAt  DateTime @map("starts_at") @db.Timestamptz(6)
+  endsAt    DateTime @map("ends_at") @db.Timestamptz(6)
+  goal      String
+  status    String
+  tenantId  String   @map("tenant_id") @db.Uuid
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  tasks     Task[]
+
+  @@map("bolt")
+}
+
+model AgentJob {
+  id             String       @id @default(uuid()) @db.Uuid
+  taskId         String?      @map("task_id") @db.Uuid
+  task           Task?        @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  intentId       String?      @map("intent_id") @db.Uuid
+  intent         Intent?      @relation(fields: [intentId], references: [id], onDelete: Cascade)
+  role           String
+  agentProfileId String       @map("agent_profile_id") @db.Uuid
+  agentProfile   AgentProfile @relation(fields: [agentProfileId], references: [id], onDelete: Cascade)
+  inputPayload   Json         @map("input_payload")
+  status         String
+  resultPayload  Json         @map("result_payload")
+  tokenBudget    Int          @map("token_budget")
+  tokensUsed     Int          @map("tokens_used")
+  costUsd        Decimal      @map("cost_usd") @db.Decimal(10, 4)
+  selfFixRounds  Int          @map("self_fix_rounds") @db.SmallInt
+  startedAt      DateTime     @map("started_at") @db.Timestamptz(6)
+  finishedAt     DateTime     @map("finished_at") @db.Timestamptz(6)
+  logRef         String       @map("log_ref")
+  tenantId       String       @map("tenant_id") @db.Uuid
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  projectId      String       @map("project_id") @db.Uuid
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  reviews        AgentReview[] @relation("ReviewerJob")
+  llmCalls       LlmCall[]
+
+  @@map("agent_job")
+}
+
+model AgentReview {
+  id            String   @id @default(uuid()) @db.Uuid
+  taskId        String   @map("task_id") @db.Uuid
+  task          Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  reviewerJobId String   @map("reviewer_job_id") @db.Uuid
+  reviewerJob   AgentJob @relation("ReviewerJob", fields: [reviewerJobId], references: [id], onDelete: Cascade)
+  prUrl         String   @map("pr_url")
+  verdict       String
+  findings      Json
+  confidence    Float    @db.Real
+  round         Int      @db.SmallInt
+  tenantId      String   @map("tenant_id") @db.Uuid
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  projectId     String   @map("project_id") @db.Uuid
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("agent_review")
+}
+
+model AttentionItem {
+  id             String    @id @default(uuid()) @db.Uuid
+  projectId      String    @map("project_id") @db.Uuid
+  project        Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type           String
+  entityType     String    @map("entity_type")
+  entityId       String    @map("entity_id") @db.Uuid
+  title          String
+  detail         String
+  severity       Int       @db.SmallInt
+  status         String
+  assigneeId     String?   @map("assignee_id") @db.Uuid
+  assignee       User?     @relation("Assignee", fields: [assigneeId], references: [id])
+  slaDeadline    DateTime  @map("sla_deadline") @db.Timestamptz(6)
+  resolution     Json
+  resolvedBy     String?   @map("resolved_by") @db.Uuid
+  resolvedByUser User?     @relation("ResolvedBy", fields: [resolvedBy], references: [id])
+  resolvedAt     DateTime? @map("resolved_at") @db.Timestamptz(6)
+  tenantId       String    @map("tenant_id") @db.Uuid
+  tenant         Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("attention_item")
+}
+
+model TestRun {
+  id        String   @id @default(uuid()) @db.Uuid
+  taskId    String   @map("task_id") @db.Uuid
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  gate      String
+  suite     String
+  status    String
+  stats     Json
+  reportUrl String   @map("report_url")
+  ranAt     DateTime @map("ran_at") @db.Timestamptz(6)
+  tenantId  String   @map("tenant_id") @db.Uuid
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  projectId String   @map("project_id") @db.Uuid
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  testRunAcs TestRunAc[]
+
+  @@map("test_run")
+}
+
+model TestRunAc {
+  id                    String              @id @default(uuid()) @db.Uuid
+  testRunId             String              @map("test_run_id") @db.Uuid
+  testRun               TestRun             @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+  acceptanceCriterionId String              @map("acceptance_criterion_id") @db.Uuid
+  acceptanceCriterion   AcceptanceCriterion @relation(fields: [acceptanceCriterionId], references: [id], onDelete: Cascade)
+  covered               Boolean
+  tenantId              String              @map("tenant_id") @db.Uuid
+  tenant                Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  projectId             String              @map("project_id") @db.Uuid
+  project               Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt             DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("test_run_ac")
+}
+
+model LlmCall {
+  id         String    @id @default(uuid()) @db.Uuid
+  projectId  String    @map("project_id") @db.Uuid
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  agentJobId String?   @map("agent_job_id") @db.Uuid
+  agentJob   AgentJob? @relation(fields: [agentJobId], references: [id], onDelete: SetNull)
+  purpose    String
+  provider   String
+  model      String
+  inputTokens Int      @map("input_tokens")
+  outputTokens Int     @map("output_tokens")
+  costUsd    Decimal   @map("cost_usd") @db.Decimal(10, 6)
+  latencyMs  Int       @map("latency_ms")
+  metadata   Json
+  tenantId   String    @map("tenant_id") @db.Uuid
+  tenant     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("llm_call")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  projectId  String   @map("project_id") @db.Uuid
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  actorType  String   @map("actor_type")
+  actorId    String?  @map("actor_id") @db.Uuid
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id") @db.Uuid
+  payload    Json
+  tenantId   String   @map("tenant_id") @db.Uuid
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("audit_log")
+}
+
+model CodeChunk {
+  id          String   @id @default(uuid()) @db.Uuid
+  projectId   String   @map("project_id") @db.Uuid
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  repoRef     String   @map("repo_ref")
+  path        String
+  symbol      String
+  kind        String
+  contentHash String   @map("content_hash")
+  embedding   Unsupported("vector(1024)")
+  summary     String
+  tenantId    String   @map("tenant_id") @db.Uuid
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("code_chunk")
+}
