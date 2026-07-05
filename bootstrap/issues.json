@@ -1,0 +1,354 @@
+{
+  "labels": [
+    {
+      "name": "uow:101",
+      "color": "1D9E75",
+      "description": "Unit of Work 101"
+    },
+    {
+      "name": "uow:102",
+      "color": "1D9E75",
+      "description": "Unit of Work 102"
+    },
+    {
+      "name": "uow:103",
+      "color": "1D9E75",
+      "description": "Unit of Work 103"
+    },
+    {
+      "name": "uow:104",
+      "color": "1D9E75",
+      "description": "Unit of Work 104"
+    },
+    {
+      "name": "uow:105",
+      "color": "1D9E75",
+      "description": "Unit of Work 105"
+    },
+    {
+      "name": "uow:106",
+      "color": "1D9E75",
+      "description": "Unit of Work 106"
+    },
+    {
+      "name": "uow:107",
+      "color": "1D9E75",
+      "description": "Unit of Work 107"
+    },
+    {
+      "name": "uow:108",
+      "color": "1D9E75",
+      "description": "Unit of Work 108"
+    },
+    {
+      "name": "role:infra",
+      "color": "534AB7",
+      "description": "Hạ tầng/skeleton"
+    },
+    {
+      "name": "role:code",
+      "color": "378ADD",
+      "description": "Coding agent"
+    },
+    {
+      "name": "role:test",
+      "color": "BA7517",
+      "description": "Testing agent"
+    },
+    {
+      "name": "role:doc",
+      "color": "888780",
+      "description": "Doc agent"
+    },
+    {
+      "name": "epic",
+      "color": "D85A30",
+      "description": "Epic theo milestone"
+    },
+    {
+      "name": "blocked",
+      "color": "E24B4A",
+      "description": "Chờ người/phụ thuộc"
+    },
+    {
+      "name": "gate",
+      "color": "993556",
+      "description": "Cần người chốt"
+    }
+  ],
+  "milestones": [
+    {
+      "title": "M1 — Xương sống",
+      "description": "Temporal + Postgres + core skeleton + adapters + GitHub App. Mốc: 1 intent chạy BA workflow → artifacts + prototype preview."
+    },
+    {
+      "title": "M2 — Toàn trình lần đầu",
+      "description": "PM agent + construction cells + Attention Queue + UI 4 màn. Mốc: 1 feature đi hết pipeline chỉ cần người ở 3 gate."
+    },
+    {
+      "title": "M3 — Brownfield & chất lượng",
+      "description": "reverse_engineer + code_chunk index + characterization tests + quality gates + extension system."
+    },
+    {
+      "title": "M4 — Multi-tenant & self-host",
+      "description": "RLS + namespace per tenant + Vault + vLLM route + Keycloak + customer portal."
+    },
+    {
+      "title": "M5 — Vận hành & đo lường",
+      "description": "OTel + Langfuse + Grafana + metrics/ROI dashboard + Jira sync + reports."
+    },
+    {
+      "title": "M6 — Scale & học",
+      "description": "Đa dự án quy mô lớn + retro tự cập nhật rules + hardening + go-live."
+    }
+  ],
+  "issues": [
+    {
+      "title": "[UOW-101] T-101.1 Khởi tạo monorepo pnpm workspaces + TS config + lint",
+      "labels": [
+        "uow:101",
+        "role:infra"
+      ],
+      "body": "## Mô tả\nMonorepo pnpm workspaces: `apps/core`, `apps/agent-worker`, `apps/ui`, `packages/shared`. TSConfig base + ESLint/Prettier thống nhất.\n\n## Definition of Done\n`pnpm install && pnpm build && pnpm lint` xanh trên máy sạch.\n\n## UoW\n`UOW-101` — allowed_paths: `/* (root), .github/, infra/`\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-101] T-101.2 Docker Compose dev: postgres16+pgvector, redis, temporal, litellm",
+      "labels": [
+        "uow:101",
+        "role:infra"
+      ],
+      "body": "## Mô tả\nCompose file cho môi trường dev cục bộ: postgres 16 kèm pgvector, redis 7, temporal + temporal-ui, litellm. Volume + healthcheck đầy đủ.\n\n## Definition of Done\n`docker compose up` → 4 service healthcheck xanh; temporal-ui truy cập được.\n\n## UoW\n`UOW-101` — allowed_paths: `infra/`\n\n## Phụ thuộc\nT-101.1\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-101] T-101.3 GitHub Actions CI: lint + build + test trên PR",
+      "labels": [
+        "uow:101",
+        "role:infra"
+      ],
+      "body": "## Mô tả\nWorkflow CI chạy trên mọi PR: lint, build, unit test toàn workspace. Cache pnpm.\n\n## Definition of Done\nPR mẫu chạy CI xanh; PR đỏ không merge được (branch protection bật sau).\n\n## UoW\n`UOW-101` — allowed_paths: `.github/`\n\n## Phụ thuộc\nT-101.1\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-102] T-102.1 Prisma schema đầy đủ theo docs/01 + migration đầu",
+      "labels": [
+        "uow:102",
+        "role:code"
+      ],
+      "body": "## Mô tả\nToàn bộ entity theo docs/01-db-schema.md: tenant, project, agent_profile, role_assignment, user, project_member, intent, clarifying_question, prototype, breakdown, requirement, story, acceptance_criterion, unit_of_work, uow_dependency, task, bolt, agent_job, agent_review, attention_item, test_run, test_run_ac, llm_call, audit_log, code_chunk.\n\n## Definition of Done\n`prisma migrate dev` sạch; enum/status khớp 100% docs/01; ERD sinh tự động commit kèm.\n\n## UoW\n`UOW-102` — allowed_paths: `apps/core/prisma/`\n\n## Phụ thuộc\nT-101.1\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-102] T-102.2 RLS per-tenant + tenant middleware + seed",
+      "labels": [
+        "uow:102",
+        "role:code"
+      ],
+      "body": "## Mô tả\nRow-Level Security theo `app.tenant_id`; NestJS middleware set tenant context per request; seed 1 tenant + 1 project + role_assignments mặc định.\n\n## Definition of Done\nTest tự động chứng minh tenant A không đọc/ghi được dữ liệu tenant B.\n\n## UoW\n`UOW-102` — allowed_paths: `apps/core/src/common/`\n\n## Phụ thuộc\nT-102.1\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-102] T-102.3 Audit service append-only",
+      "labels": [
+        "uow:102",
+        "role:code"
+      ],
+      "body": "## Mô tả\nAudit module: mọi mutation qua service layer tự ghi AuditLog (actor, action, entity, payload trước/sau). Chặn UPDATE/DELETE trên bảng audit bằng quyền DB.\n\n## Definition of Done\nTest: mọi chuyển trạng thái sinh đúng audit record; không có đường update trực tiếp.\n\n## UoW\n`UOW-102` — allowed_paths: `apps/core/src/audit/`\n\n## Phụ thuộc\nT-102.1\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-103] T-103.1 Temporal worker + workflow IntentPipeline khung",
+      "labels": [
+        "uow:103",
+        "role:code"
+      ],
+      "body": "## Mô tả\nTemporal worker trong core; workflow `IntentPipeline` nhận pathway, chạy stage theo stage-matrix (docs/00 §5), skeleton các activity.\n\n## Definition of Done\nWorkflow start từ API, thấy được trên temporal-ui, replay an toàn.\n\n## UoW\n`UOW-103` — allowed_paths: `apps/core/src/orchestrator/`\n\n## Phụ thuộc\nT-102.1, T-101.2\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-103] T-103.2 Activities: dispatch agent-job + chờ kết quả + cập nhật DB",
+      "labels": [
+        "uow:103",
+        "role:code"
+      ],
+      "body": "## Mô tả\nActivity enqueue job vào BullMQ theo job contract (docs/03 §3), chờ callback hoàn thành (signal/polling), cập nhật trạng thái task/intent.\n\n## Definition of Done\nRetry/timeout đúng spec; job mock chạy từ workflow end-to-end.\n\n## UoW\n`UOW-103` — allowed_paths: `apps/core/src/orchestrator/`\n\n## Phụ thuộc\nT-103.1\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-103] T-103.3 Gate = Temporal signal + AttentionItem",
+      "labels": [
+        "uow:103",
+        "role:code"
+      ],
+      "body": "## Mô tả\nĐến gate → tạo AttentionItem, workflow chờ signal `gate_approve/gate_reject`; resolve attention → gửi signal.\n\n## Definition of Done\nTest: workflow dừng đúng gate, resume đúng nhánh approve/reject, audit ghi đủ.\n\n## UoW\n`UOW-103` — allowed_paths: `apps/core/src/orchestrator/`\n\n## Phụ thuộc\nT-103.1\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-104] T-104.1 Worker skeleton: BullMQ consumer + workspace + callbacks",
+      "labels": [
+        "uow:104",
+        "role:code"
+      ],
+      "body": "## Mô tả\napps/agent-worker: consumer queue `agent-jobs`, chuẩn bị workspace (clone + worktree), callback events về core (`/internal/agent-jobs/:id/events`).\n\n## Definition of Done\nJob mock chạy end-to-end, events + log về core đầy đủ.\n\n## UoW\n`UOW-104` — allowed_paths: `apps/agent-worker/`\n\n## Phụ thuộc\nT-101.1\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-104] T-104.2 Adapter interface + registry + resolve profile 3 cấp",
+      "labels": [
+        "uow:104",
+        "role:code"
+      ],
+      "body": "## Mô tả\nInterface CodingAgentAdapter (docs/03 §2), registry, resolve profile: task → uow.agent_overrides → role_assignment.\n\n## Definition of Done\nUnit test resolve override đủ 3 cấp + audit profile đã resolve.\n\n## UoW\n`UOW-104` — allowed_paths: `apps/agent-worker/src/adapters/`\n\n## Phụ thuộc\nT-104.1\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-104] T-104.3 Adapter claude-code headless",
+      "labels": [
+        "uow:104",
+        "role:code"
+      ],
+      "body": "## Mô tả\nSpawn `claude -p --output-format stream-json`, materialize rules per role vào CLAUDE.md/.claude/, parse stream (usage → LlmCall), phát hiện BLOCKED.md → needs_human, structured output từ aidlc-docs/output.json.\n\n## Definition of Done\nChạy thật 1 job role=ba trên intent mẫu → artifacts inception + usage ghi về core.\n\n## UoW\n`UOW-104` — allowed_paths: `apps/agent-worker/src/adapters/claude-code/`\n\n## Phụ thuộc\nT-104.2\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-104] T-104.4 Sandbox: non-root, egress allowlist, budget, timeout",
+      "labels": [
+        "uow:104",
+        "role:code"
+      ],
+      "body": "## Mô tả\nContainer per job: non-root, egress chỉ model endpoint + github.com + preview provider, token budget dừng cứng, timeout SIGTERM + grace 30s, diff guard theo allowed_paths.\n\n## Definition of Done\nTest: chạm budget/timeout kill đúng; sửa file ngoài allowed_paths bị reject.\n\n## UoW\n`UOW-104` — allowed_paths: `apps/agent-worker/src/sandbox/`\n\n## Phụ thuộc\nT-104.1\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-104] T-104.5 Job prototype: HTML prototype + deploy GitHub Pages",
+      "labels": [
+        "uow:104",
+        "role:code"
+      ],
+      "body": "## Mô tả\nJob role=prototype: sinh HTML prototype tĩnh (watermark MOCKUP) trên branch `factory/proto-*`, deploy GitHub Pages, trả preview_url.\n\n## Definition of Done\nIntent mẫu ra preview URL bấm được; feedback loop rebuild version mới.\n\n## UoW\n`UOW-104` — allowed_paths: `apps/agent-worker/src/jobs/prototype/`\n\n## Phụ thuộc\nT-104.3, T-107.1\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-105] T-105.1 Spike antigravity headless (timebox 3 ngày)",
+      "labels": [
+        "uow:105",
+        "role:test"
+      ],
+      "body": "## Mô tả\nKiểm chứng: antigravity có chế độ non-interactive/CLI không, cách truyền rules, cách đọc usage. Viết báo cáo so sánh với claude-code trên cùng 1 task mẫu (chất lượng + token cost).\n\n## Definition of Done\nBáo cáo spike + quyết định: adapter đầy đủ / semi-manual (`factory report-job`).\n\n## UoW\n`UOW-105` — allowed_paths: `apps/agent-worker/src/adapters/antigravity/`\n\n## Phụ thuộc\nT-104.2\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-105] T-105.2 Implement adapter antigravity theo kết luận spike",
+      "labels": [
+        "uow:105",
+        "role:code"
+      ],
+      "body": "## Mô tả\nImplement theo kết luận T-105.1: adapter đầy đủ hoặc semi-manual CLI.\n\n## Definition of Done\n1 job chạy qua antigravity end-to-end (hoặc qua CLI report-job).\n\n## UoW\n`UOW-105` — allowed_paths: `apps/agent-worker/src/adapters/antigravity/`\n\n## Phụ thuộc\nT-105.1\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-106] T-106.1 LiteLLM: route model, key per tenant, quota",
+      "labels": [
+        "uow:106",
+        "role:infra"
+      ],
+      "body": "## Mô tả\nConfig LiteLLM: route đa model, virtual key per tenant, quota/budget per project/ngày, failover.\n\n## Definition of Done\nGọi từ 2 tenant → cost/quota tách nhau; chạm quota bị chặn đúng.\n\n## UoW\n`UOW-106` — allowed_paths: `infra/litellm/`\n\n## Phụ thuộc\nT-101.2\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-106] T-106.2 Module llm: LlmCall ledger + metrics summary",
+      "labels": [
+        "uow:106",
+        "role:code"
+      ],
+      "body": "## Mô tả\nModule llm trong core: ghi LlmCall (batch từ worker + call trực tiếp), endpoint `/projects/:pid/metrics/summary`. Không lưu full prompt mặc định (hash + độ dài).\n\n## Definition of Done\nCost per project/role query được; số khớp LiteLLM log.\n\n## UoW\n`UOW-106` — allowed_paths: `apps/core/src/llm/`\n\n## Phụ thuộc\nT-102.1\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-107] T-107.1 GitHub App: auth + client (branch, PR, comment, issue)",
+      "labels": [
+        "uow:107",
+        "role:code"
+      ],
+      "body": "## Mô tả\nGitHub App: installation token TTL ngắn, client wrapper: tạo branch, PR (kèm self-report comment), issue, enable auto-merge.\n\n## Definition of Done\nTạo branch + PR trên repo test qua API từ integration test.\n\n## UoW\n`UOW-107` — allowed_paths: `apps/core/src/integrations/github/`\n\n## Phụ thuộc\nT-102.1\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-107] T-107.2 Webhook endpoint + verify signature",
+      "labels": [
+        "uow:107",
+        "role:code"
+      ],
+      "body": "## Mô tả\nEndpoint `/webhooks/github` verify X-Hub-Signature-256; xử lý: issues.opened (label factory) → Intent; PR merged → task integrated; workflow_run → TestRun(ci), fail lặp ≥2 → AttentionItem.\n\n## Definition of Done\nEvent mẫu (fixture) xử lý đúng cả 3 loại; signature sai bị từ chối.\n\n## UoW\n`UOW-107` — allowed_paths: `apps/core/src/integrations/github/`\n\n## Phụ thuộc\nT-107.1\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-108] T-108.1 Module intake: POST intents + classify",
+      "labels": [
+        "uow:108",
+        "role:code"
+      ],
+      "body": "## Mô tả\nAPI tạo Intent (portal/email/issue), giữ raw nguyên văn; classify qua LLM: pathway + confidence + summary + scores.\n\n## Definition of Done\nTạo intent → pathway + confidence lưu DB; audit ghi.\n\n## UoW\n`UOW-108` — allowed_paths: `apps/core/src/intake/`\n\n## Phụ thuộc\nT-103.1, T-106.2\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-108] T-108.2 Questionnaire + public link token",
+      "labels": [
+        "uow:108",
+        "role:code"
+      ],
+      "body": "## Mô tả\nJob ba sinh câu hỏi làm rõ; public link token cho khách trả lời không cần login; answer API + resume workflow.\n\n## Definition of Done\nKhách trả lời qua link; đủ câu trả lời → workflow chạy tiếp BA.\n\n## UoW\n`UOW-108` — allowed_paths: `apps/core/src/intake/`\n\n## Phụ thuộc\nT-108.1\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[UOW-108] T-108.3 E2E M1: intent → BA → prototype preview → gate A",
+      "labels": [
+        "uow:108",
+        "role:test"
+      ],
+      "body": "## Mô tả\nKịch bản E2E hoàn chỉnh: intent mẫu → classify → questionnaire → BA artifacts (requirements/stories/AC) → prototype preview URL → AttentionItem gate_a. Đây là mốc nghiệm thu M1.\n\n## Definition of Done\nDemo được toàn luồng; audit + LlmCall ghi đủ; artifacts nằm trong aidlc-docs/ của repo mẫu.\n\n## UoW\n`UOW-108` — allowed_paths: `apps/core/test/e2e/`\n\n## Phụ thuộc\nTất cả task M1 còn lại\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n_Nguồn: docs/05-pm-breakdown.md (Gate B đã chốt)._",
+      "milestone": "M1 — Xương sống"
+    },
+    {
+      "title": "[EPIC] M2 — Toàn trình lần đầu",
+      "labels": [
+        "epic"
+      ],
+      "body": "## Phạm vi\nPM agent · construction cells (design/code/test/cross-review/auto-merge) · Attention Queue · UI 4 màn hình. Mốc: 1 feature nhỏ đi hết pipeline chỉ cần người ở 3 gate. Phân rã chi tiết khi vào mốc.\n\n## Nguồn\ndocs/04-architecture.md §8 · docs/05-pm-breakdown.md §4\n\nPhân rã thành issue chi tiết khi bắt đầu mốc (đúng nhịp bolt — không phân rã trước quá xa).",
+      "milestone": "M2 — Toàn trình lần đầu"
+    },
+    {
+      "title": "[EPIC] M3 — Brownfield & chất lượng",
+      "labels": [
+        "epic"
+      ],
+      "body": "## Phạm vi\nreverse_engineer job · code_chunk index (tree-sitter + pgvector) · characterization tests · quality gates Sonar/Semgrep · extension system per khách.\n\n## Nguồn\ndocs/04-architecture.md §8 · docs/05-pm-breakdown.md §4\n\nPhân rã thành issue chi tiết khi bắt đầu mốc (đúng nhịp bolt — không phân rã trước quá xa).",
+      "milestone": "M3 — Brownfield & chất lượng"
+    },
+    {
+      "title": "[EPIC] M4 — Multi-tenant & self-host",
+      "labels": [
+        "epic"
+      ],
+      "body": "## Phạm vi\nRLS hoàn chỉnh · namespace K8s per tenant · Vault · vLLM route cho dự án nhạy cảm · Keycloak SSO · customer portal.\n\n## Nguồn\ndocs/04-architecture.md §8 · docs/05-pm-breakdown.md §4\n\nPhân rã thành issue chi tiết khi bắt đầu mốc (đúng nhịp bolt — không phân rã trước quá xa).",
+      "milestone": "M4 — Multi-tenant & self-host"
+    },
+    {
+      "title": "[EPIC] M5 — Vận hành & đo lường",
+      "labels": [
+        "epic"
+      ],
+      "body": "## Phạm vi\nOTel + Langfuse + Grafana · metrics/ROI dashboard · Jira sync 2 chiều · bolt/acceptance reports.\n\n## Nguồn\ndocs/04-architecture.md §8 · docs/05-pm-breakdown.md §4\n\nPhân rã thành issue chi tiết khi bắt đầu mốc (đúng nhịp bolt — không phân rã trước quá xa).",
+      "milestone": "M5 — Vận hành & đo lường"
+    },
+    {
+      "title": "[EPIC] M6 — Scale & học",
+      "labels": [
+        "epic"
+      ],
+      "body": "## Phạm vi\nĐiều phối đa dự án quy mô lớn · retro tự động cập nhật rules · hardening · tài liệu vận hành · go-live nội bộ.\n\n## Nguồn\ndocs/04-architecture.md §8 · docs/05-pm-breakdown.md §4\n\nPhân rã thành issue chi tiết khi bắt đầu mốc (đúng nhịp bolt — không phân rã trước quá xa).",
+      "milestone": "M6 — Scale & học"
+    }
+  ]
+}
