@@ -1,1 +1,13 @@
-{"commands":[]}
+{
+ "commands": [
+  {
+   "action": "merge_pr",
+   "pr": 29
+  },
+  {
+   "action": "comment",
+   "number": 1,
+   "body": "✅ Cross-review PASS (PM agent): monorepo skeleton đúng DoD — pnpm install/build/lint xanh (verified trong sandbox). Squash merge PR #29."
+  }
+ ]
+}
