@@ -1,0 +1,96 @@
+# Software Factory — local dev environment (T-101.2 / UOW-101, issue #2)
+# Usage: docker compose -f infra/docker-compose.dev.yml --env-file infra/.env up -d
+name: software-factory-dev
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: factory-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: factory
+      POSTGRES_USER: ${POSTGRES_USER:-factory}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-factory}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-factory} -d factory"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: factory-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  temporal:
+    image: temporalio/auto-setup:latest
+    container_name: factory-temporal
+    ports:
+      - "7233:7233"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Standard temporalio/auto-setup Postgres config.
+      # auto-setup creates its own databases (temporal, temporal_visibility)
+      # inside the shared postgres instance — separate from the "factory" DB.
+      DB: postgres12
+      DB_PORT: "5432"
+      POSTGRES_SEEDS: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-factory}
+      POSTGRES_PWD: ${POSTGRES_PASSWORD:-factory}
+      DBNAME: temporal
+      VISIBILITY_DBNAME: temporal_visibility
+    healthcheck:
+      test: ["CMD-SHELL", "temporal operator cluster health --address localhost:7233 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  temporal-ui:
+    image: temporalio/ui:latest
+    container_name: factory-temporal-ui
+    ports:
+      - "8080:8080"
+    depends_on:
+      - temporal
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+      TEMPORAL_CORS_ORIGINS: http://localhost:3000
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: factory-litellm
+    ports:
+      - "4000:4000"
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-sk-factory-dev}
+    volumes:
+      - ./litellm/config.yaml:/app/config.yaml:ro
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/health/liveliness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+volumes:
+  postgres_data:
+  redis_data:
