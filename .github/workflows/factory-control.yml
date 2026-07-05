@@ -1,0 +1,37 @@
+name: factory-control
+
+on:
+  push:
+    branches: [main]
+    paths: ["control/commands.json"]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  execute:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const { owner, repo } = context.repo;
+            const cmds = JSON.parse(fs.readFileSync('control/commands.json', 'utf8'));
+            for (const c of cmds.commands || []) {
+              try {
+                if (c.action === 'merge_pr') {
+                  await github.rest.pulls.merge({ owner, repo, pull_number: c.pr, merge_method: 'squash' });
+                  core.info(`merged PR #${c.pr}`);
+                } else if (c.action === 'comment') {
+                  await github.rest.issues.createComment({ owner, repo, issue_number: c.number, body: c.body });
+                } else if (c.action === 'close_issue') {
+                  await github.rest.issues.update({ owner, repo, issue_number: c.number, state: 'closed' });
+                } else if (c.action === 'label') {
+                  await github.rest.issues.addLabels({ owner, repo, issue_number: c.number, labels: c.labels });
+                }
+              } catch (e) { core.warning(`${c.action} failed: ${e.message}`); }
+            }
