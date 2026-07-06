@@ -78,9 +78,12 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      postgres:
+        condition: service_healthy
     environment:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-sk-factory-dev}
+      LITELLM_DATABASE_URL: postgresql://${POSTGRES_USER:-factory}:${POSTGRES_PASSWORD:-factory}@postgres:5432/factory
     volumes:
       - ./litellm/config.yaml:/app/config.yaml:ro
     command: ["--config", "/app/config.yaml", "--port", "4000"]
