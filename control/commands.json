@@ -1,13 +1,24 @@
 {
  "commands": [
   {
-   "action": "merge_pr",
-   "pr": 32
+   "action": "comment",
+   "number": 5,
+   "body": "🔧 WORK ORDER — giao cho Antigravity (coding agent)\n\n**Việc**: [UOW-102] T-102.2 RLS per-tenant + tenant middleware + seed.\n\n**Các bước**:\n1. Branch `factory/5-rls-tenant-isolation` từ main mới nhất\n2. Migration mới (KHÔNG sửa migration cũ): với mỗi bảng nghiệp vụ có `tenant_id` — `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` + `CREATE POLICY tenant_isolation ON ... USING (tenant_id = current_setting('app.tenant_id')::uuid)`\n3. `apps/core/src/common/tenant-context.ts`: hàm set `app.tenant_id` qua `SET LOCAL` trong 1 transaction Prisma (`$transaction` + `$executeRawUnsafe('SET LOCAL app.tenant_id = $1', tenantId)` — tham số hoá, không nối chuỗi trực tiếp)\n4. `apps/core/prisma/seed.ts`: seed 1 tenant + 1 project mẫu\n5. Test: tạo 2 tenant A/B, set context tenant A, query bảng project — phải KHÔNG thấy row của tenant B\n\n**Verify DoD**: test chứng minh tenant A không đọc được data tenant B · `pnpm exec prisma validate` pass\n\n**allowed_paths**: `apps/core/prisma/`, `apps/core/src/common/`\n**Commit cuối dòng**: `Closes #5` — push branch, KHÔNG merge."
   },
   {
    "action": "comment",
-   "number": 4,
-   "body": "✅ Cross-review PASS (PM agent): 26 model đúng docs/01, tenant_id + index + pgvector chuẩn. 2 finding nhỏ chuyển sang T-102.2 (#5): thiếu check agent_review.verdict và constraint một-trong-hai-FK cho acceptance_criterion/agent_job. Merge PR #32. 👏 Job đầu tiên của Antigravity qua agent-bridge thành công."
+   "number": 6,
+   "body": "🔧 WORK ORDER — giao cho Antigravity (coding agent)\n\n**Việc**: [UOW-102] T-102.3 Audit service append-only.\n\n**Các bước**:\n1. Branch `factory/6-audit-service` từ main mới nhất\n2. `apps/core/src/audit/audit.service.ts`: hàm `record(entry: {tenantId, projectId?, actor, action, entityType, entityId, before?, after?})` — insert vào bảng `audit_log`, append-only\n3. `apps/core/src/audit/audit.interceptor.ts`: interceptor mẫu (class theo interface chuẩn NestJS `NestInterceptor`, chưa cần wire vào app thật) minh hoạ ghi audit khi trạng thái đổi\n4. Test: gọi `record()` với input mẫu → kiểm tra đúng field lưu; interceptor gọi đúng `record()` (mock service)\n\n**Verify DoD**: test: mọi chuyển trạng thái sinh đúng audit record · `pnpm lint` xanh\n\n**allowed_paths**: `apps/core/src/audit/`\n**Commit cuối dòng**: `Closes #6` — push branch, KHÔNG merge."
+  },
+  {
+   "action": "comment",
+   "number": 19,
+   "body": "🔧 WORK ORDER — giao cho Antigravity (coding agent)\n\n**Việc**: [UOW-107] T-107.1 GitHub App: auth + client (branch, PR, comment, issue).\n\n**Các bước**:\n1. Branch `factory/19-github-app-client` từ main mới nhất\n2. `apps/core/src/integrations/github/github-app-auth.ts`: sinh JWT App (RS256, private key từ env `GITHUB_APP_PRIVATE_KEY`, app id `GITHUB_APP_ID`) → đổi lấy installation access token, cache nhớ TTL ngắn, tự refresh khi hết hạn\n3. `apps/core/src/integrations/github/github.client.ts`: `createBranch`, `createPr`, `commentOnIssue`, `getIssue` (dùng `fetch` thuần)\n4. Test: mock `fetch` global — luồng lấy token cache/refresh đúng, mỗi method gọi đúng endpoint/method/header\n\n**Verify DoD**: test mock đầy đủ pass · `pnpm build && pnpm lint` xanh\n\n**allowed_paths**: `apps/core/src/integrations/github/`\n**Commit cuối dòng**: `Closes #19` — push branch, KHÔNG merge."
+  },
+  {
+   "action": "comment",
+   "number": 20,
+   "body": "🔧 WORK ORDER — giao cho Antigravity (coding agent)\n\n**Việc**: [UOW-107] T-107.2 Webhook endpoint + verify signature.\n\n**Các bước**:\n1. Branch `factory/20-github-webhook` từ main mới nhất (phụ thuộc #19 — nếu #19 chưa merge, base tạm trên `factory/19-github-app-client`, ghi rõ trong PR)\n2. `apps/core/src/integrations/github/webhook.controller.ts` (class chuẩn `@Controller`/`@Post`, chưa cần wire vào app thật): verify `X-Hub-Signature-256` bằng HMAC SHA-256 (`GITHUB_WEBHOOK_SECRET`, timing-safe compare)\n3. Xử lý 3 event: `issues.opened` (label `factory` → Intent draft), `pull_request` closed+merged (đánh dấu Task/UoW), `workflow_run` (ghi TestRun theo conclusion)\n4. Test: verify signature đúng/sai, mỗi loại event mẫu xử lý đúng nhánh (mock DB/service)\n\n**Verify DoD**: test event mẫu pass (mock) · `pnpm lint` xanh\n\n**allowed_paths**: `apps/core/src/integrations/github/`\n**Commit cuối dòng**: `Closes #20` — push branch, KHÔNG merge."
   }
  ]
 }
