@@ -1,17 +1,23 @@
 model_list:
-  # Anthropic Claude 3.5 Sonnet
+  # Anthropic Claude (yêu cầu chính của issue)
+  - model_name: claude
+    litellm_params:
+      model: anthropic/claude-sonnet
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  # Anthropic Claude 3.5 Sonnet (dùng cho fallback/routing)
   - model_name: claude-3-5-sonnet
     litellm_params:
       model: anthropic/claude-3-5-sonnet-20241022
       api_key: os.environ/ANTHROPIC_API_KEY
 
-  # OpenAI GPT-4o (Chừa sẵn comment cho người dùng dễ cấu hình khi cần)
+  # OpenAI GPT-4o (Chừa sẵn block comment cho người dùng dễ cấu hình khi cần)
   # - model_name: gpt-4o
   #   litellm_params:
   #     model: openai/gpt-4o
   #     api_key: os.environ/OPENAI_API_KEY
 
-  # Self-hosted model (Chừa sẵn comment cho vLLM/Ollama/HuggingFace)
+  # Self-hosted model (Chừa sẵn block comment cho vLLM/Ollama/HuggingFace)
   # - model_name: self-hosted-llama3
   #   litellm_params:
   #     model: openai/meta-llama/Meta-Llama-3-8B-Instruct
@@ -23,6 +29,10 @@ router_settings:
   enable_pre_call_checks: true
   allowed_fails: 3
   cooldown_time: 30
+  num_retries: 3
+  # Fallback cơ bản từ model claude sang model claude-3-5-sonnet nếu xảy ra lỗi
+  fallbacks:
+    - claude: ["claude-3-5-sonnet"]
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
