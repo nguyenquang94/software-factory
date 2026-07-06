@@ -1,13 +1,18 @@
 {
  "commands": [
   {
-   "action": "merge_pr",
-   "pr": 34
+   "action": "create_issue",
+   "title": "[UOW-108] T-108.2b Trang hỏi đáp câu hỏi làm rõ (public, không đăng nhập)",
+   "milestone": 1,
+   "labels": ["role:code", "uow:108"],
+   "body": "## Mô tả\nBootstrap `apps/ui` (React + Vite, chưa có ai làm) và dựng 1 trang duy nhất: khách trả lời câu hỏi làm rõ qua link công khai (token trong URL, không cần đăng nhập). Mỗi câu 1 màn, thanh tiến trình, hỗ trợ trắc nghiệm (nếu `ClarifyingQuestion.options` có giá trị — render radio/checkbox) và trả lời tự do (textarea), màn cảm ơn khi xong hết câu.\n\n## Mockup đã chốt (Gate thiết kế — PM duyệt trước khi dispatch)\nMockup tham chiếu: layout 1 card, header tên dự án + tóm tắt, thanh tiến trình 4 bước, câu hỏi hiện từng câu một, nút 'Câu tiếp theo', trạng thái hoàn tất hiện banner cảm ơn màu success. Bám đúng bố cục này khi code (không tự sáng tác layout khác).\n\n## Definition of Done\n- Gọi được API trả lời (từ #22, nếu #22 chưa xong thì mock response) qua token trong URL, không yêu cầu login\n- Render đúng loại input theo `options` (có → chọn 1/nhiều; không có → tự do)\n- Responsive cơ bản (mobile 375px vẫn dùng được)\n- Màn cảm ơn khi trả lời xong câu cuối\n\n## UoW\n`UOW-108` (mở rộng T-108.2) — allowed_paths: `apps/ui/**`\n\n## Phụ thuộc\n#22 (API trả lời câu hỏi) — CHƯA dispatch, đợi #7-9 (orchestrator) và #21 (intake) xong trước. Đây là issue theo dõi, chưa giao cho coding agent.\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n*Nguồn: docs/05-pm-breakdown.md + mockup PM duyệt ngày 2026-07-06.*"
   },
   {
-   "action": "comment",
-   "number": 17,
-   "body": "✅ Review PASS (PM agent): config.yaml đủ model_list + router failover (latency-based, allowed_fails, cooldown) + general_settings bật virtual key qua Postgres; docker-compose thêm depends_on postgres healthy đúng; README hướng dẫn tạo/update virtual key + budget per tenant rõ ràng. CI xanh. Merge PR #34.\n\n⚠️ 1 gap nhỏ: chưa có bước verify thật (tạo 2 key 2 tenant, xác nhận chạm quota bị chặn) vì môi trường chạy agent không có Docker — DoD gốc ghi điều kiện \"nếu máy có Docker\" nên chấp nhận, nhưng cần verify thủ công 1 lần trước khi dùng thật. Theo dõi riêng, không tạo issue mới — nhắc lại khi bắt đầu UOW-108 (E2E, cần LLM gateway chạy thật)."
+   "action": "create_issue",
+   "title": "[factory-ui] Attention Queue + Gate A review (kéo sớm 1 phần từ M2 vào M1)",
+   "milestone": 1,
+   "labels": ["role:code"],
+   "body": "## Mô tả\nM1 cần demo thật AttentionItem ở trạng thái gate_a (T-108.3), nên kéo sớm ĐÚNG 2/4 màn của factory-ui (không làm Intake, không làm Plan board — 2 màn đó vẫn ở M2):\n1. **Attention Queue**: danh sách AttentionItem (gate + flag), filter theo loại, mỗi item hiện SLA còn lại\n2. **Gate A review panel**: khi chọn 1 item Gate A — hiện tóm tắt Requirements/Stories/AC, link Prototype preview, 3 hành động: yêu cầu làm rõ thêm / từ chối / duyệt Gate A\n\n## Mockup đã chốt (Gate thiết kế — PM duyệt trước khi dispatch)\nLayout 3 cột: sidebar điều hướng (168px, có badge số lượng attention item) · danh sách queue (260px, thẻ card có badge loại + SLA) · panel chi tiết bên phải (metric card Requirements/Stories, tóm tắt text, khối prototype preview có nút mở, 3 nút hành động cuối trang). Bám đúng bố cục, màu sắc theo CDS tokens (--bg-accent cho Gate A, --text-danger cho nút Từ chối, --fill-accent cho nút Duyệt).\n\n## Definition of Done\n- List Attention Queue gọi API thật (cần module `attention` — nếu chưa có, tạo issue backend riêng trước khi dispatch UI)\n- Duyệt/Từ chối Gate A gọi đúng signal Temporal qua API (theo docs/03)\n- Test cơ bản: render đúng danh sách, click item đổi panel phải\n\n## Phụ thuộc\n#7-9 (orchestrator, gate=signal), #21 (intake), backend attention queue (module `attention` trong docs/00 §4 — CHƯA có issue riêng, cần PM tạo trước khi dispatch UI này). Đây là issue theo dõi, chưa giao cho coding agent.\n\n## Quy ước\nBranch: `factory/<issue>-<slug>` · PR phải có `Closes #<issue>` · squash merge · CI xanh trước khi merge.\n\n*Nguồn: docs/00-overview.md §4,§8 + mockup PM duyệt ngày 2026-07-06.*"
   }
  ]
 }

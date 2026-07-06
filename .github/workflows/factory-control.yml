@@ -32,6 +32,13 @@ jobs:
                   await github.rest.issues.update({ owner, repo, issue_number: c.number, state: 'closed' });
                 } else if (c.action === 'label') {
                   await github.rest.issues.addLabels({ owner, repo, issue_number: c.number, labels: c.labels });
+                } else if (c.action === 'create_issue') {
+                  const created = await github.rest.issues.create({
+                    owner, repo, title: c.title, body: c.body,
+                    labels: c.labels || [],
+                    milestone: c.milestone,
+                  });
+                  core.info(`created issue #${created.data.number}`);
                 }
               } catch (e) { core.warning(`${c.action} failed: ${e.message}`); }
             }
